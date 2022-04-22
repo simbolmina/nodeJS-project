@@ -6,24 +6,19 @@ const router = express.Router();
 
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
+router.get('/logout', authController.logout);
+
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
 router.use(authController.protect);
 //this is a middleware and by design middleware runs in sequense. so using authController.protect as a middleware is to apply all other middleware comes after it so we dont need add protect for each of routes by adding here.
 
-router.patch(
-  '/updateMyPassword',
-  // authController.protect,
-  authController.updatePassword
-);
+router.patch('/updateMyPassword', authController.updatePassword);
+// authController.protect,
+router.get('/me', userController.getMe, userController.getUser);
+// authController.protect,
 
-router.get(
-  '/me',
-  // authController.protect,
-  userController.getMe,
-  userController.getUser
-);
 router.patch('/updateMe', userController.updateMe);
 router.delete('/deleteMe', userController.deleteMe);
 

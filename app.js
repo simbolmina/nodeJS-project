@@ -6,6 +6,8 @@ const helmet = require('helmet'); //security package comes with 14 options
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -13,6 +15,7 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
@@ -24,12 +27,40 @@ app.set('views', path.join(__dirname, 'views'));
 
 ////////GLOBAL MIDDLEWARES /////////
 
+// app.use(
+//   cors({
+//     origin: '*',
+//     credentials: true,
+//   })
+// );
+
 //serving static files
 // app.use(express.static(`${__dirname}/public`)); //how to serve static files
-app.use(express.static(path.join(__dirname, 'public'))); //how to serve static files
+app.use(express.static(path.join(__dirname, 'public'))); //how to serve static files. this includes css files as well. thats why we dont need to show css folder to pug files.
 
 //security http headers
 app.use(helmet());
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:', 'blob:'],
+      baseUri: ["'self'"],
+      fontSrc: ["'self'", 'https:', 'http:', 'data:', 'blob:'],
+      scriptSrc: ["'self'", 'https://*.cloudflare.com'],
+      scriptSrc: ["'self'", 'https://*.stripe.com'],
+      scriptSrc: ["'self'", 'https://*.mapbox.com'],
+      frameSrc: ["'self'", 'https://*.stripe.com'],
+      objectSrc: ["'none'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
+      workerSrc: ["'self'", 'data:', 'blob:'],
+      childSrc: ["'self'", 'blob:'],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      connectSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
+      upgradeInsecureRequests: [],
+    },
+  })
+);
 
 //development logging
 
@@ -50,6 +81,13 @@ app.use('/api', limiter); //this will be used all of our APIs
 //body parser, reading data from body to into req.body
 
 app.use(express.json({ limit: '10kb' })); //this is middleware. with limit, if a body larger than 10k comes it will not be accepted. this is a security middle ware.
+
+//we need this for complex (big) data coming from url (query);
+//we use this for updating user info
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+//cookie parser.
+app.use(cookieParser());
 
 //Data sanitizations aginst NoQSL query injection
 app.use(mongoSanitize()); //clean $ from inputs to prevent  "email" : {"$gt": ""},
@@ -80,15 +118,14 @@ app.use(
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   // console.log(req.headers);
+  // console.log(req.cookieParser);
   next();
 });
 
 /// ROUTES
 
-app.get('/', (req, res) => {
-  res.status(200).render('base');
-});
-
+app.use('/', viewRouter);
+app.use('/login', viewRouter);
 app.use('/api/v1/tours', tourRouter); // mounting a new router to route bas
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);

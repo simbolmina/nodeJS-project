@@ -20,7 +20,7 @@ const createSendToken = (user, statusCode, res) => {
       Date.now() + process.env.JWT_COOKIE_EXPRIES_IN * 24 * 60 * 60 * 1000
     ),
     // secure: true, //use only https
-    httpOnly: true, //browser cant access/read token to prevent attacks
+    httpOnly: true, //browser cant access/read/delete token (prevent attacks)
   };
 
   if (process.env.NODE_ENV === 'production') cookiePoptions.secure = true;
@@ -98,6 +98,18 @@ exports.login = catchAsync(async (req, res, next) => {
   // });
 });
 
+exports.logout = (req, res) => {
+  //we created and sent a token as a cookie when user loggedin. what we want for logout we send another token as a cokkie but this token will be invalid. the token with the same name will override existing legit token and user will be logged out.
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    //then token expires in 10sec and disappears
+    httpOnly: true,
+  });
+  res.status(200).json({
+    status: 'success',
+  });
+};
+
 exports.protect = catchAsync(async (req, res, next) => {
   //1- get token and check if it exist
 
@@ -108,6 +120,9 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt && req.cookies.jwt !== 'loggedout') {
+    token = req.cookies.jwt;
+    //if there is no token in header then use cookies and use it as a token
   }
 
   // console.log(token);
@@ -140,8 +155,46 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   //if all upper ones are ok then next to middleware(route)
   req.user = currentUser;
+  res.locals.user = currentUser;
   next();
 });
+
+// only for rendered pages, no errors
+exports.isLoggedIn = async (req, res, next) => {
+  //1- get token and check if it exist
+  if (req.cookies.jwt) {
+    //there wasa catchAsync function here but it would cause error when logged out when jwt.verify. so we created try-catch block locally for this function and in case of faiuler we simply go next()
+    try {
+      // 1 - verify token
+
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      //2- check  if user exists, maybe user is deleted or changed its password
+
+      const currentUser = await User.findById(decoded.id);
+
+      if (!currentUser) {
+        return next();
+      }
+
+      //3- check if user changed password after token was issued
+
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+      //if all upper ones are ok then there is a user logged in
+      res.locals.user = currentUser;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
+  next();
+  //if there is no token then is now logged in user and we move to next middleware
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {

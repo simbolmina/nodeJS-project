@@ -1,3 +1,31 @@
-h1 The Park Camper 
+doctype html 
+html
+    head
+        block head 
+        meta(charset='UTF-8')
+        meta(name='viewport' content='width=device-width, initial-scale=1.0')
+        //- <link rel="stylesheet" href="css/style.css"/> html
+        link(rel='stylesheet' href='/css/style.css')
+        link(rel='shourtcut icon' type='image/png' href='/img/favicon.png')
+        link(rel='stylesheet'   href='https://fonts.googleapis.com/css?family=Lato:300,300i,700')
+        
+        title Natours | #{title}
 
-//- this means <h1>The Park Camper</h1>
+    body
+        // HEADER
+        include _header
+
+        // CONTENT
+        block content
+            h1 This is a placeholder heading
+
+        
+        // FOOTER
+        include _footer
+
+        //- script(src='/js/mapbox.js')
+        //- we moded this here in order to let it load locations so we can use it.
+        script(src='/js/bundle.js')
+        //- script(src='/js/login.js')
+        //- script(script-src-elem='https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js')
+        //- script(src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous" referrerpolicy="no-referrer")
