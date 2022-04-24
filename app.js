@@ -21,6 +21,9 @@ const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
+app.enable('trust proxy');
+//this is for heroku to work properly with createSendToken function in authCont
+
 //in order to set our backend and service to client we use template engines. in this case we use pug and we set it right starting of the app.js
 app.set('view engine', 'pug');
 //express support this natively and we dont require or install pug

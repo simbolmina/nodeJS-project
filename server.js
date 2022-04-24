@@ -45,3 +45,11 @@ process.on('unhandledRejection', (err) => {
     process.exit(1);
   });
 });
+
+//heroku specific error to terminate program. it will be shutdown in every 24hours. so we do it `greacefully`
+process.on('SIGTERM', () => {
+  console.log('SIGTERM RECEIVED. Shutting down...');
+  server.close(() => {
+    console.log('SERVED CLOSED');
+  });
+});
