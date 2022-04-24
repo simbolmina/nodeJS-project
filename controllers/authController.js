@@ -50,9 +50,9 @@ exports.signup = catchAsync(async (req, res, next) => {
   //   role: req.body.role,
   // });
 
-  // const url = `${req.protocol}://${req.get('host')}/me`;
-  const url = 'http://localhost:3000/me';
-  console.log(url);
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  // const url = 'http://localhost:3000/me';
+  // console.log(url);
 
   await new Email(newUser, url).sendWelcome();
 
@@ -305,7 +305,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 exports.updatePassword = catchAsync(async (req, res, next) => {
   // 1 - get user from collection
   const user = await User.findById(req.user.id).select('+password');
-  console.log(user);
+  // console.log(user);
 
   // 2 - check if posted password is correct
 

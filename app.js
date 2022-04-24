@@ -8,6 +8,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -35,26 +36,26 @@ app.use(express.static(path.join(__dirname, 'public'))); //how to serve static f
 //security http headers
 app.use(helmet());
 
-// app.use(
-//   helmet.contentSecurityPolicy({
-//     directives: {
-//       defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:', 'blob:'],
-//       baseUri: ["'self'"],
-//       fontSrc: ["'self'", 'https:', 'http:', 'data:', 'blob:'],
-//       scriptSrc: ["'self'", 'https://*.cloudflare.com'],
-//       scriptSrc: ["'self'", 'https://*.stripe.com'],
-//       scriptSrc: ["'self'", 'https://*.mapbox.com'],
-//       frameSrc: ["'self'", 'https://*.stripe.com'],
-//       objectSrc: ["'none'"],
-//       styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
-//       workerSrc: ["'self'", 'data:', 'blob:'],
-//       childSrc: ["'self'", 'blob:'],
-//       imgSrc: ["'self'", 'data:', 'blob:'],
-//       connectSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
-//       upgradeInsecureRequests: [],
-//     },
-//   })
-// );
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:', 'blob:'],
+      baseUri: ["'self'"],
+      fontSrc: ["'self'", 'https:', 'http:', 'data:', 'blob:'],
+      scriptSrc: ["'self'", 'https://*.cloudflare.com'],
+      scriptSrc: ["'self'", 'https://*.stripe.com'],
+      scriptSrc: ["'self'", 'https://*.mapbox.com'],
+      frameSrc: ["'self'", 'https://*.stripe.com'],
+      objectSrc: ["'none'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
+      workerSrc: ["'self'", 'data:', 'blob:'],
+      childSrc: ["'self'", 'blob:'],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      connectSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
+      upgradeInsecureRequests: [],
+    },
+  })
+);
 
 // app.use(
 //   helmet({
@@ -144,13 +145,15 @@ app.use(
 //   next(); //this call is a must
 // });
 
+app.use(compression());
+
 //test middleware
-app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  // console.log(req.headers);
-  // console.log(req.cookieParser);
-  next();
-});
+// app.use((req, res, next) => {
+//   req.requestTime = new Date().toISOString();
+//   // console.log(req.headers);
+//   // console.log(req.cookieParser);
+//   next();
+// });
 
 /// ROUTES
 
