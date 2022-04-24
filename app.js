@@ -2,12 +2,12 @@ const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const helmet = require('helmet'); //security package comes with 14 options
+const helmet = require('helmet');
+//security package comes with 14 options
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
-const cors = require('cors');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -15,6 +15,7 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const bookingRouter = require('./routes/bookingRoutes');
 const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
@@ -27,13 +28,6 @@ app.set('views', path.join(__dirname, 'views'));
 
 ////////GLOBAL MIDDLEWARES /////////
 
-// app.use(
-//   cors({
-//     origin: '*',
-//     credentials: true,
-//   })
-// );
-
 //serving static files
 // app.use(express.static(`${__dirname}/public`)); //how to serve static files
 app.use(express.static(path.join(__dirname, 'public'))); //how to serve static files. this includes css files as well. thats why we dont need to show css folder to pug files.
@@ -41,26 +35,62 @@ app.use(express.static(path.join(__dirname, 'public'))); //how to serve static f
 //security http headers
 app.use(helmet());
 
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:', 'blob:'],
-      baseUri: ["'self'"],
-      fontSrc: ["'self'", 'https:', 'http:', 'data:', 'blob:'],
-      scriptSrc: ["'self'", 'https://*.cloudflare.com'],
-      scriptSrc: ["'self'", 'https://*.stripe.com'],
-      scriptSrc: ["'self'", 'https://*.mapbox.com'],
-      frameSrc: ["'self'", 'https://*.stripe.com'],
-      objectSrc: ["'none'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
-      workerSrc: ["'self'", 'data:', 'blob:'],
-      childSrc: ["'self'", 'blob:'],
-      imgSrc: ["'self'", 'data:', 'blob:'],
-      connectSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
-      upgradeInsecureRequests: [],
-    },
-  })
-);
+// app.use(
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:', 'blob:'],
+//       baseUri: ["'self'"],
+//       fontSrc: ["'self'", 'https:', 'http:', 'data:', 'blob:'],
+//       scriptSrc: ["'self'", 'https://*.cloudflare.com'],
+//       scriptSrc: ["'self'", 'https://*.stripe.com'],
+//       scriptSrc: ["'self'", 'https://*.mapbox.com'],
+//       frameSrc: ["'self'", 'https://*.stripe.com'],
+//       objectSrc: ["'none'"],
+//       styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
+//       workerSrc: ["'self'", 'data:', 'blob:'],
+//       childSrc: ["'self'", 'blob:'],
+//       imgSrc: ["'self'", 'data:', 'blob:'],
+//       connectSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
+//       upgradeInsecureRequests: [],
+//     },
+//   })
+// );
+
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'", 'data:', 'blob:', 'https:', 'ws:'],
+//         baseUri: ["'self'"],
+//         fontSrc: ["'self'", 'https:', 'data:'],
+//         scriptSrc: [
+//           "'self'",
+//           'https:',
+//           'http:',
+//           'blob:',
+//           'https://*.mapbox.com',
+//           'https://js.stripe.com',
+//           'https://*.cloudflare.com',
+//         ],
+//         frameSrc: ["'self'", 'https://js.stripe.com'],
+//         objectSrc: ['none'],
+//         styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+//         workerSrc: ["'self'", 'data:', 'blob:'],
+//         childSrc: ["'self'", 'blob:'],
+//         imgSrc: ["'self'", 'data:', 'blob:'],
+//         connectSrc: [
+//           "'self'",
+//           'blob:',
+//           'wss:',
+//           'https://*.tiles.mapbox.com',
+//           'https://api.mapbox.com',
+//           'https://events.mapbox.com',
+//         ],
+//         upgradeInsecureRequests: [],
+//       },
+//     },
+//   })
+// );
 
 //development logging
 
@@ -129,6 +159,7 @@ app.use('/login', viewRouter);
 app.use('/api/v1/tours', tourRouter); // mounting a new router to route bas
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/booking', bookingRouter);
 
 //if any response dont hit upper routers and reach here, we give an error. so all undefined requests will get this error instead of a html
 
@@ -147,3 +178,24 @@ app.all('*', (req, res, next) => {
 app.use(globalErrorHandler);
 
 module.exports = app;
+
+/* some suggestions
+
+business logic - api side
+1- add restriction that user can only review tours they are booked
+2- nested booking routes. like all and for invidual user
+3- imporove tour dates. if certean tour reaches maxGroup size\ suggest another date to new user who wants to buy that tour. participant count should not booked ones.
+4-confirm user mail address, add refresh token feature and two-factor auth
+
+website
+1- signup page
+2- add review option for user who booked / participated tour
+3- add "like tour" function for all user
+4- hide booking section from tour page from user who are already booked or add a message as book again
+5- add 'my reviews' page and user can edit there
+6- for admins, create a manage page. they can create, read, update, delete tours, users, reviews and bookings.
+
+
+
+
+*/

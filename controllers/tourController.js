@@ -1,8 +1,72 @@
+const multer = require('multer');
+const sharp = require('sharp');
 const Tour = require('./../models/tourModel');
 const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const factory = require('./handlerFactory');
+
+const multerStorage = multer.memoryStorage();
+
+//we only want images to be uploded. this is filtering function for multer.
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+//in profile picture we used upload.single() but here its upload.fields()
+//then an object with field name and max image count.
+exports.uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+
+//if we did not have two seperate field for field but one field with multiple images we would do like this.
+// exports.uploadTourImages = upload.array('images', 5)
+
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+  // console.log(req.files);
+
+  if (!req.files.imageCover || !req.files.images) return next();
+
+  //1-cover image
+
+  req.body.imageCover = `tours-${req.params.id}-${Date.now()}-cover.jpeg`;
+
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1333) //resize to 500x500px
+    .toFormat('jpeg') // format should be jpeg
+    .jpeg({ quality: 90 }) // compress it to %90
+    .toFile(`public/img/tours/${req.body.imageCover}`); //write photo this folder after resizing.
+
+  //2-images
+  req.body.images = [];
+  //there are 3 images in an array for images in tourSchema. we create an empty array and push each image into array after resizing. we have use map method with Promise.all() instead of forEach becuase map creates a promise or else next() would run before this process finishes
+
+  await Promise.all(
+    req.files.images.map(async (file, i) => {
+      const filename = `tours-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+
+      await sharp(file.buffer)
+        .resize(2000, 1333) //resize to 500x500px
+        .toFormat('jpeg') // format should be jpeg
+        .jpeg({ quality: 90 }) // compress it to %90
+        .toFile(`public/img/tours/${filename}`); //write photo this folder after resizing.
+
+      req.body.images.push(filename);
+    })
+  );
+
+  next();
+});
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';

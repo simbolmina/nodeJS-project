@@ -1,6 +1,4 @@
 /* eslint-disable */
-import { mapboxgl } from 'mapboxgl';
-
 export const displayMap = (locations) => {
   // console.log(locations);
 

@@ -1,5 +1,6 @@
 const Tour = require('./../models/tourModel');
 const User = require('./../models/userModel');
+const Booking = require('./../models/bookingModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
@@ -33,16 +34,10 @@ exports.getTour = async (req, res, next) => {
   // build template
 
   // render template using data from 1
-  res
-    .status(200)
-    .set(
-      'Content-Security-Policy',
-      'connect-src https://*.tiles.mapbox.com https://api.mapbox.com https://events.mapbox.com'
-    )
-    .render('tour', {
-      title: tour.name,
-      tour,
-    });
+  res.status(200).render('tour', {
+    title: tour.name,
+    tour,
+  });
 };
 
 exports.getLogin = async (req, res, next) => {
@@ -56,6 +51,21 @@ exports.getAccount = (req, res, next) => {
     title: 'Your Account',
   });
 };
+
+exports.getMyTours = catchAsync(async (req, res, next) => {
+  // 1- find all bookings
+  const bookings = await Booking.find({ user: req.user.id });
+
+  // 2- find tours with the returned id
+  const tourIDs = bookings.map((el) => el.tour);
+  const tours = await Tour.find({ _id: { $in: tourIDs } });
+
+  res.status(200).render('overview', {
+    title: 'My Tours',
+    tours,
+  });
+  //same main page with only booked tours instead of all tours
+});
 
 // exports.updateUserData = catchAsync(async (req, res, next) => {
 //   console.log('update user data', req.body);

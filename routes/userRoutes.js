@@ -1,4 +1,6 @@
 const express = require('express');
+
+//multer package is for uploading complex, multi optional documents.
 const userController = require('./../controllers/userController');
 const authController = require('./../controllers/authController');
 
@@ -19,7 +21,13 @@ router.patch('/updateMyPassword', authController.updatePassword);
 router.get('/me', userController.getMe, userController.getUser);
 // authController.protect,
 
-router.patch('/updateMe', userController.updateMe);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe
+);
+
 router.delete('/deleteMe', userController.deleteMe);
 
 router.use(authController.restrictTo('admin'));
