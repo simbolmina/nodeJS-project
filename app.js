@@ -18,6 +18,7 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
+const bookingController = require('./controllers/bookingController');
 const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
@@ -53,59 +54,23 @@ app.use(express.static(path.join(__dirname, 'public'))); //how to serve static f
 //security http headers
 app.use(helmet());
 
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:', 'blob:'],
-      baseUri: ["'self'"],
-      fontSrc: ["'self'", 'https:', 'http:', 'data:', 'blob:'],
-      scriptSrc: ["'self'", 'https://*.cloudflare.com'],
-      scriptSrc: ["'self'", 'https://*.stripe.com'],
-      scriptSrc: ["'self'", 'https://*.mapbox.com'],
-      frameSrc: ["'self'", 'https://*.stripe.com'],
-      objectSrc: ["'none'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
-      workerSrc: ["'self'", 'data:', 'blob:'],
-      childSrc: ["'self'", 'blob:'],
-      imgSrc: ["'self'", 'data:', 'blob:'],
-      connectSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
-      upgradeInsecureRequests: [],
-    },
-  })
-);
-
 // app.use(
-//   helmet({
-//     contentSecurityPolicy: {
-//       directives: {
-//         defaultSrc: ["'self'", 'data:', 'blob:', 'https:', 'ws:'],
-//         baseUri: ["'self'"],
-//         fontSrc: ["'self'", 'https:', 'data:'],
-//         scriptSrc: [
-//           "'self'",
-//           'https:',
-//           'http:',
-//           'blob:',
-//           'https://*.mapbox.com',
-//           'https://js.stripe.com',
-//           'https://*.cloudflare.com',
-//         ],
-//         frameSrc: ["'self'", 'https://js.stripe.com'],
-//         objectSrc: ['none'],
-//         styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
-//         workerSrc: ["'self'", 'data:', 'blob:'],
-//         childSrc: ["'self'", 'blob:'],
-//         imgSrc: ["'self'", 'data:', 'blob:'],
-//         connectSrc: [
-//           "'self'",
-//           'blob:',
-//           'wss:',
-//           'https://*.tiles.mapbox.com',
-//           'https://api.mapbox.com',
-//           'https://events.mapbox.com',
-//         ],
-//         upgradeInsecureRequests: [],
-//       },
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:', 'blob:'],
+//       baseUri: ["'self'"],
+//       fontSrc: ["'self'", 'https:', 'http:', 'data:', 'blob:'],
+//       scriptSrc: ["'self'", 'https://*.cloudflare.com'],
+//       scriptSrc: ["'self'", 'https://*.stripe.com'],
+//       scriptSrc: ["'self'", 'https://*.mapbox.com'],
+//       frameSrc: ["'self'", 'https://*.stripe.com'],
+//       objectSrc: ["'none'"],
+//       styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
+//       workerSrc: ["'self'", 'data:', 'blob:'],
+//       childSrc: ["'self'", 'blob:'],
+//       imgSrc: ["'self'", 'data:', 'blob:'],
+//       connectSrc: ["'self'", 'blob:', 'https://*.mapbox.com'],
+//       upgradeInsecureRequests: [],
 //     },
 //   })
 // );
@@ -125,6 +90,15 @@ const limiter = rateLimit({
 });
 
 app.use('/api', limiter); //this will be used all of our APIs
+
+app.post(
+  '/webhook-checkout',
+  express.raw({
+    type: 'application/json',
+  }),
+  bookingController.webhookCheckout
+);
+//stripe function needs webhookCheckout body in raw format, not json. thats why we put it here and use express.raw
 
 //body parser, reading data from body to into req.body
 
