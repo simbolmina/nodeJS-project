@@ -16,7 +16,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     //   req.params.tourId
     // }&user=${req.user.id}&price=${tour.price}`,
 
-    success_url: `${req.protocol}://${req.get('host')}/my-tours?alert=booking`,
+    success_url: `${req.protocol}://${req.get('host')}/?tours`,
     //costumer will be redirected main page after paymet
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
     //if costumer cancel paymet it will be redirected to last tour page
@@ -31,7 +31,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
         description: tour.summary,
         //   images: [`https://www.natours.dev/img/tours/${tour.imageCover}.jpg`]
         images: [
-          `${req.protocol}://${req.get('host')}/img/tours/${tour.imageCover}`,
+          `${req.protocol}://${req.get('host')}/img/tour${tour.imageCover}`,
         ],
         amount: tour.price * 100, //amount is expected in cents
         currency: 'usd',
