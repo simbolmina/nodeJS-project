@@ -16,7 +16,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     //   req.params.tourId
     // }&user=${req.user.id}&price=${tour.price}`,
 
-    success_url: `${req.protocol}://${req.get('host')}/?tours`,
+    success_url: `${req.protocol}://${req.get('host')}/my-tours?alert=booking`,
     //costumer will be redirected main page after paymet
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
     //if costumer cancel paymet it will be redirected to last tour page
